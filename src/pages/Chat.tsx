@@ -241,6 +241,15 @@ export function Chat() {
         is_sent: true,
       };
 
+      // メッセージを送信する前に一時的に表示
+      const tempMessage = {
+        ...messageData,
+        id: `temp-${Date.now()}`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, tempMessage]);
+      setNewMessage(''); // 入力フィールドをクリア
+
       // ユーザーメッセージを送信
       const { data: userMessage, error: userMessageError } = await supabase
         .from('messages')
@@ -268,12 +277,21 @@ export function Chat() {
           ai_response: aiMessage,
         };
 
+        // AI応答を一時的に表示
+        const tempAiMessage = {
+          ...aiMessageData,
+          id: `temp-ai-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, tempAiMessage]);
+
         await supabase.from('messages').insert([aiMessageData]);
       }
 
-      setNewMessage('');
     } catch (error) {
       console.error('メッセージ送信エラー:', error);
+      // エラーが発生した場合、一時メッセージを削除
+      setMessages(prev => prev.filter(msg => !msg.id.startsWith('temp-')));
     }
   };
 
